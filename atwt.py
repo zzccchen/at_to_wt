@@ -305,32 +305,6 @@ for period, row_elements in enumerate(periodic_table_layout, start=1):
             label = tk.Label(frame, text="  ", width=button_width)
             label.grid(row=0, column=col, sticky="ew", padx=1, pady=1)
 
-# # Create the GUI layout based on the periodic table layout
-# for period, row_elements in enumerate(periodic_table_layout, start=1):
-#     frame = tk.Frame(root)
-#     frame.pack(side=tk.TOP, fill=tk.X, padx=3, pady=3)
-#     for i, symbol in enumerate(row_elements, start=1):
-#         if symbol:
-#             btn = tk.Button(frame, text=symbol, command=lambda s=symbol: element_button_clicked(s), width=3)
-#             btn.pack(side=tk.LEFT, padx=1, pady=1)
-#         elif symbol == None:
-#             # Create an empty space for alignment
-#             label = tk.Label(frame, text="   ", width=3)
-#             label.pack(side=tk.LEFT, padx=1, pady=1)
-
-# # The lanthanides and actinides are typically shown separately beneath the main table
-# lanthanides_frame = tk.Frame(root)
-# lanthanides_frame.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
-# for symbol in periodic_table_layout[-2]:
-#     btn = tk.Button(lanthanides_frame, text=symbol, command=lambda s=symbol: element_button_clicked(s))
-#     btn.pack(side=tk.LEFT, padx=2, pady=2)
-
-# actinides_frame = tk.Frame(root)
-# actinides_frame.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
-# for symbol in periodic_table_layout[-1]:
-#     btn = tk.Button(actinides_frame, text=symbol, command=lambda s=symbol: element_button_clicked(s))
-#     btn.pack(side=tk.LEFT, padx=2, pady=2)
-
 
 # Create the Reset button and corresponding click event handler function
 def reset_button_clicked():
@@ -351,10 +325,22 @@ def reset_button_clicked():
 # Function to handle wt to at conversion
 def convert_wt2at_button_clicked():
     try:
-        wt_percents = [float(entries[symbol]["wt"].get()) for symbol in entries]
+        wt_percents = [
+            float(entries[symbol]["wt"].get()) if entries[symbol]["wt"].get() else None
+            for symbol in entries
+        ]
         symbols = list(entries.keys())
-        atomic_masses = [get_atomic_mass(symbol) for symbol in symbols]
 
+        # If the input of the first element is empty, 
+        # calculate the sum of the weight percentages of the remaining elements
+        if wt_percents[0] is None:
+            remaining_sum = sum(filter(None, wt_percents[1:]))
+            wt_percents[0] = 100.0 - remaining_sum
+            # Fill the calculated value back into the input box of the first element
+            entries[symbols[0]]["wt"].delete(0, tk.END)
+            entries[symbols[0]]["wt"].insert(0, str(wt_percents[0]))
+
+        atomic_masses = [get_atomic_mass(symbol) for symbol in symbols]
         at_percents = wt_to_at(wt_percents, atomic_masses)
 
         for i, symbol in enumerate(symbols):
@@ -368,10 +354,22 @@ def convert_wt2at_button_clicked():
 # Function to handle at to wt conversion
 def convert_at2wt_button_clicked():
     try:
-        at_percents = [float(entries[symbol]["at"].get()) for symbol in entries]
+        at_percents = [
+            float(entries[symbol]["at"].get()) if entries[symbol]["at"].get() else None
+            for symbol in entries
+        ]
         symbols = list(entries.keys())
-        atomic_masses = [get_atomic_mass(symbol) for symbol in symbols]
 
+        # If the input of the first element is empty, 
+        # calculate the sum of the atomic percentages of the remaining elements
+        if at_percents[0] is None:
+            remaining_sum = sum(filter(None, at_percents[1:]))
+            at_percents[0] = 100.0 - remaining_sum
+            # Fill the calculated value back into the input box of the first element
+            entries[symbols[0]]["at"].delete(0, tk.END)
+            entries[symbols[0]]["at"].insert(0, str(at_percents[0]))
+
+        atomic_masses = [get_atomic_mass(symbol) for symbol in symbols]
         wt_percents = at_to_wt(at_percents, atomic_masses)
 
         for i, symbol in enumerate(symbols):
